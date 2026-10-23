@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>图书角 · 借书登记</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4ECDC4;
+            --primary-light: #A8E6CF;
+            --primary-dark: #3DB8B0;
+            --accent: #FF6B6B;
+            --accent-light: #FFE66D;
+            --bg: #F7FFF9;
+            --bg-card: #FFFFFF;
+            --text: #2C3E50;
+            --text-light: #7F8C8D;
+            --border: #E8F5F1;
+            --shadow: 0 4px 20px rgba(78, 205, 196, 0.12);
+            --shadow-hover: 0 8px 30px rgba(78, 205, 196, 0.2);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #F7FFF9 0%, #E8F8F5 50%, #F0FFF4 100%);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 20px 16px 40px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 装饰性背景元素 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, var(--primary-light) 0%, transparent 70%);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -80px;
+            left: -80px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 520px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            padding: 30px 0 28px;
+        }
+
+        .header-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .header-icon::after {
+            content: '📚';
+            font-size: 28px;
+            position: absolute;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        /* 卡片 */
+        .card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 28px 22px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: linear-gradient(to bottom, var(--primary), var(--primary-light));
+            border-radius: 2px;
+        }
+
+        /* 表单组 */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .form-group label .required {
+            color: var(--accent);
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .form-group label .optional {
+            color: var(--text-light);
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 13px 16px;
+            font-size: 15px;
+            color: var(--text);
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #B0BEC5;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.6;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        /* 提示文字 */
+        .hint {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        /* 提交按钮 */
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 选填区域特殊样式 */
+        .optional-section {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF4CC 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 8px;
+            position: relative;
+        }
+
+        .optional-section::before {
+            content: '💡';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            font-size: 24px;
+            background: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .optional-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #E67E22;
+            margin-bottom: 6px;
+            padding-left: 4px;
+        }
+
+        .optional-desc {
+            font-size: 13px;
+            color: #B7752A;
+            margin-bottom: 14px;
+            line-height: 1.6;
+            padding-left: 4px;
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--text);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 1000;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #E74C3C 0%, #EC7063 100%);
+        }
+
+        /* 成功页面 */
+        .success-card {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .success-card.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .success-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .success-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .success-desc {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .success-info {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: left;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 2;
+        }
+
+        .success-info strong {
+            color: var(--primary-dark);
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .again-btn {
+            display: inline-block;
+            padding: 12px 32px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary-dark);
+            background: white;
+            border: 2px solid var(--primary-light);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .again-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 20px 0 10px;
+            font-size: 12px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .footer .heart {
+            color: var(--accent);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 响应式 */
+        @media (max-width: 380px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="header-icon"></div>
+            <h1>图书角借书登记</h1>
+            <p>阅读点亮生活，分享传递知识 ✨</p>
+        </div>
+
+        <!-- 借书登记卡片 -->
+        <div class="card" id="form-card">
+            <div class="card-title">借书信息</div>
+            
+            <form id="borrow-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>借书日期 <span class="required">*</span></label>
+                        <input type="date" id="borrow-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>预计还书 <span class="required">*</span></label>
+                        <input type="date" id="return-date" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>书籍名称 <span class="required">*</span></label>
+                    <input type="text" id="book-name" placeholder="请输入书籍名称" required maxlength="100">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>姓名 <span class="required">*</span></label>
+                        <input type="text" id="student-name" placeholder="请输入您的姓名" required maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>学号 <span class="required">*</span></label>
+                        <input type="text" id="student-id" placeholder="请输入学号" required maxlength="20">
+                    </div>
+                </div>
+
+                <!-- 选填征集区 -->
+                <div class="optional-section">
+                    <div class="optional-title">图书征集 · 选填</div>
+                    <div class="optional-desc">
+                        有想看但图书角没有的书？告诉我们吧！你的建议会帮助我们丰富图书角的藏书~ 📚
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>想看的书 <span class="optional">(选填)</span></label>
+                        <textarea id="wish-books" placeholder="例如：《三体》《人类简史》《活着》……可以写一本或多本哦" maxlength="200"></textarea>
+                        <div class="hint" id="char-count">0/200 字</div>
+                    </div>
+                </div>
+
+                <div style="height: 24px;"></div>
+
+                <button type="submit" class="submit-btn">✓ 提交登记</button>
+            </form>
+        </div>
+
+        <!-- 成功提示卡片 -->
+        <div class="card success-card" id="success-card">
+            <div class="success-icon">🎉</div>
+            <div class="success-title">登记成功！</div>
+            <div class="success-desc">祝你阅读愉快，记得按时还书哦~</div>
+            
+            <div class="success-info" id="success-info">
+                <!-- 动态填充 -->
+            </div>
+
+            <button class="again-btn" onclick="resetForm()">📖 继续登记下一本</button>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>用 <span class="heart">♥</span> 守护每一次阅读</p>
+            <p style="margin-top: 4px;">图书角 · 让知识流动起来</p>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const STORAGE_KEY = 'library_borrow_records';
+
+        // 获取所有记录
+        function getRecords() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // 保存记录
+        function saveRecords(records) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        }
+
+        // 显示 Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}月${day}日`;
+        }
+
+        // 设置默认日期
+        function setDefaultDates() {
+            const today = new Date();
+            const borrowDate = document.getElementById('borrow-date');
+            const returnDate = document.getElementById('return-date');
+            
+            // 借书日期默认为今天
+            const todayStr = today.toISOString().split('T')[0];
+            borrowDate.value = todayStr;
+            borrowDate.min = todayStr;
+            
+            // 还书日期默认为14天后
+            const returnDay = new Date(today);
+            returnDay.setDate(today.getDate() + 14);
+            returnDate.value = returnDay.toISOString().split('T')[0];
+            returnDate.min = todayStr;
+        }
+
+        // 提交表单
+        document.getElementById('borrow-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const borrowDate = document.getElementById('borrow-date').value;
+            const returnDate = document.getElementById('return-date').value;
+            const bookName = document.getElementById('book-name').value.trim();
+            const studentName = document.getElementById('student-name').value.trim();
+            const studentId = document.getElementById('student-id').value.trim();
+            const wishBooks = document.getElementById('wish-books').value.trim();
+
+            // 验证还书日期不早于借书日期
+            if (new Date(returnDate) < new Date(borrowDate)) {
+                showToast('还书日期不能早于借书日期哦', 'error');
+                return;
+            }
+
+            // 保存到本地存储
+            const record = {
+                id: Date.now(),
+                borrowDate,
+                returnDate,
+                bookName,
+                studentName,
+                studentId,
+                wishBooks,
+                returned: false,
+                actualReturnDate: null,
+                createdAt: new Date().toISOString()
+            };
+
+            const records = getRecords();
+            records.unshift(record);
+            saveRecords(records);
+
+            // 显示成功卡片
+            const successInfo = document.getElementById('success-info');
+            let infoHtml = `
+                <div><strong>书籍名称：</strong>${escapeHtml(bookName)}</div>
+                <div><strong>借书人：</strong>${escapeHtml(studentName)}（${escapeHtml(studentId)}）</div>
+                <div><strong>借书日期：</strong>${formatDate(borrowDate)}</div>
+                <div><strong>预计还书：</strong>${formatDate(returnDate)}</div>
+            `;
+            if (wishBooks) {
+                infoHtml += `<div><strong>想看的书：</strong>${escapeHtml(wishBooks)}</div>`;
+            }
+            successInfo.innerHTML = infoHtml;
+
+            document.getElementById('form-card').style.display = 'none';
+            document.getElementById('success-card').classList.add('show');
+
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // 重置表单
+        function resetForm() {
+            // 保留姓名和学号，清空其他
+            document.getElementById('book-name').value = '';
+            document.getElementById('wish-books').value = '';
+            document.getElementById('char-count').textContent = '0/200 字';
+            setDefaultDates();
+
+            document.getElementById('success-card').classList.remove('show');
+            document.getElementById('form-card').style.display = 'block';
+            document.getElementById('book-name').focus();
+        }
+
+        // 字数统计
+        document.getElementById('wish-books').addEventListener('input', function() {
+            const count = this.value.length;
+            document.getElementById('char-count').textContent = count + '/200 字';
+        });
+
+        // HTML 转义防止 XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 初始化
+        setDefaultDates();
+    </script>
+</body>
+</html>

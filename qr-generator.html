@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书角 · 二维码生成器</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4ECDC4;
+            --primary-light: #A8E6CF;
+            --primary-dark: #3DB8B0;
+            --accent: #FF6B6B;
+            --accent-light: #FFE66D;
+            --bg: #F7FFF9;
+            --bg-card: #FFFFFF;
+            --text: #2C3E50;
+            --text-light: #7F8C8D;
+            --border: #E8F5F1;
+            --shadow: 0 4px 20px rgba(78, 205, 196, 0.12);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #F7FFF9 0%, #E8F8F5 50%, #F0FFF4 100%);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 700px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(to bottom, var(--primary), var(--primary-light));
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 14px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: var(--bg);
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 13px;
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .btn-group .btn {
+            flex: 1;
+        }
+
+        /* 二维码预览区 - 打印样式 */
+        .qr-preview {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .qr-printable {
+            width: 100%;
+            max-width: 340px;
+            background: white;
+            border-radius: 20px;
+            padding: 30px 25px 25px;
+            border: 3px solid var(--primary-light);
+            text-align: center;
+            position: relative;
+        }
+
+        .qr-printable::before {
+            content: '📚';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            background: var(--primary);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .qr-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+            margin-top: 10px;
+        }
+
+        .qr-subtitle {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 18px;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        #qrcode img,
+        #qrcode canvas {
+            border-radius: 10px;
+        }
+
+        .qr-tip {
+            font-size: 12px;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .qr-tip strong {
+            color: var(--primary-dark);
+        }
+
+        .hint-box {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF4CC 100%);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #B7752A;
+            line-height: 1.6;
+        }
+
+        .hint-box strong {
+            color: #E67E22;
+        }
+
+        .steps {
+            counter-reset: step;
+            list-style: none;
+        }
+
+        .steps li {
+            position: relative;
+            padding-left: 36px;
+            margin-bottom: 14px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 26px;
+            height: 26px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                max-width: 100%;
+            }
+            .card:first-child,
+            .header,
+            .btn-group,
+            .hint-box {
+                display: none;
+            }
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .card {
+                box-shadow: none;
+                padding: 0;
+            }
+            .qr-printable {
+                border: none;
+                max-width: 100%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 图书角二维码生成器</h1>
+            <p>输入你的网页地址，一键生成可打印的二维码海报</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- 左侧：设置区 -->
+            <div class="card">
+                <div class="card-title">生成设置</div>
+
+                <div class="hint-box">
+                    <strong>💡 使用提示：</strong><br>
+                    将 <code>index.html</code> 部署到服务器后，把访问地址粘贴到下方，即可生成专属二维码。
+                </div>
+
+                <div class="form-group">
+                    <label>网页地址 (URL)</label>
+                    <input type="text" id="url-input" placeholder="https://example.com/library" value="https://example.com/library">
+                </div>
+
+                <div class="form-group">
+                    <label>二维码标题</label>
+                    <input type="text" id="title-input" placeholder="图书角借书登记" value="图书角借书登记">
+                </div>
+
+                <div class="form-group">
+                    <label>副标题</label>
+                    <input type="text" id="subtitle-input" placeholder="扫码即可登记借书" value="扫码即可登记借书">
+                </div>
+
+                <button class="btn" onclick="generateQR()">✨ 生成二维码</button>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="printQR()">🖨️ 打印二维码</button>
+                    <button class="btn btn-secondary" onclick="downloadQR()">💾 下载图片</button>
+                </div>
+
+                <div style="margin-top: 28px;">
+                    <div class="card-title" style="font-size: 16px;">部署步骤</div>
+                    <ol class="steps">
+                        <li>将 <strong>index.html</strong> 文件上传到你的网页服务器</li>
+                        <li>获取部署后的网页访问链接（URL）</li>
+                        <li>将链接粘贴到上方输入框，生成二维码</li>
+                        <li>打印或下载二维码，贴在图书角即可使用</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- 右侧：预览区 -->
+            <div class="card">
+                <div class="card-title">二维码预览</div>
+                <div class="qr-preview">
+                    <div class="qr-printable">
+                        <div class="qr-title" id="preview-title">图书角借书登记</div>
+                        <div class="qr-subtitle" id="preview-subtitle">扫码即可登记借书</div>
+                        <div id="qrcode"></div>
+                        <div class="qr-tip">
+                            <strong>温馨提示：</strong>请爱护图书，按时归还<br>让知识在流动中传递 💫
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let qrcode = null;
+
+        function generateQR() {
+            const url = document.getElementById('url-input').value.trim();
+            const title = document.getElementById('title-input').value.trim();
+            const subtitle = document.getElementById('subtitle-input').value.trim();
+
+            if (!url) {
+                alert('请输入网页地址');
+                return;
+            }
+
+            // 更新预览文字
+            document.getElementById('preview-title').textContent = title || '图书角借书登记';
+            document.getElementById('preview-subtitle').textContent = subtitle || '扫码即可登记借书';
+
+            // 清空旧二维码
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+
+            // 生成新二维码
+            qrcode = new QRCode(qrContainer, {
+                text: url,
+                width: 220,
+                height: 220,
+                colorDark: '#2C3E50',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function printQR() {
+            window.print();
+        }
+
+        function downloadQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) {
+                alert('请先生成二维码');
+                return;
+            }
+
+            // 创建一个更大的画布来包含整个海报
+            const posterCanvas = document.createElement('canvas');
+            const ctx = posterCanvas.getContext('2d');
+            
+            const posterWidth = 500;
+            const posterHeight = 650;
+            posterCanvas.width = posterWidth;
+            posterHeight.height = posterHeight;
+
+            // 绘制背景
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, posterWidth, posterHeight);
+
+            // 绘制边框
+            ctx.strokeStyle = '#A8E6CF';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(20, 40, posterWidth - 40, posterHeight - 60);
+
+            // 绘制标题
+            ctx.fillStyle = '#2C3E50';
+            ctx.font = 'bold 28px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(document.getElementById('preview-title').textContent, posterWidth / 2, 100);
+
+            // 绘制副标题
+            ctx.fillStyle = '#7F8C8D';
+            ctx.font = '16px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+            ctx.fillText(document.getElementById('preview-subtitle').textContent, posterWidth / 2, 130);
+
+            // 绘制二维码
+            const qrSize = 280;
+            const qrX = (posterWidth - qrSize) / 2;
+            const qrY = 160;
+            ctx.drawImage(canvas, qrX, qrY, qrSize, qrSize);
+
+            // 绘制提示文字
+            ctx.fillStyle = '#7F8C8D';
+            ctx.font = '13px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+            ctx.fillText('温馨提示：请爱护图书，按时归还', posterWidth / 2, 490);
+            ctx.fillText('让知识在流动中传递 💫', posterWidth / 2, 515);
+
+            // 下载
+            const link = document.createElement('a');
+            link.download = '图书角二维码.png';
+            link.href = posterCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // 页面加载时生成默认二维码
+        window.onload = function() {
+            generateQR();
+        };
+    </script>
+</body>
+</html>

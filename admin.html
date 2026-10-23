@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>图书角 · 后台管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4ECDC4;
+            --primary-light: #A8E6CF;
+            --primary-dark: #3DB8B0;
+            --accent: #FF6B6B;
+            --accent-light: #FFE66D;
+            --warning: #F39C12;
+            --success: #27AE60;
+            --danger: #E74C3C;
+            --bg: #F7FFF9;
+            --bg-card: #FFFFFF;
+            --text: #2C3E50;
+            --text-light: #7F8C8D;
+            --border: #E8F5F1;
+            --shadow: 0 4px 20px rgba(78, 205, 196, 0.12);
+            --shadow-hover: 0 8px 30px rgba(78, 205, 196, 0.2);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #F7FFF9 0%, #E8F8F5 50%, #F0FFF4 100%);
+            min-height: 100vh;
+            color: var(--text);
+            padding: 20px 16px 40px;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            padding: 24px 0 20px;
+        }
+
+        .header-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            font-size: 28px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--primary-dark);
+            text-decoration: none;
+            padding: 6px 14px;
+            border: 1px solid var(--primary-light);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* 统计卡片 */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-item {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 18px 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-item.total .stat-number {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-item.borrowing .stat-number {
+            background: linear-gradient(135deg, #3498DB, #2980B9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-item.overdue .stat-number {
+            background: linear-gradient(135deg, var(--danger), #C0392B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-item.wish .stat-number {
+            background: linear-gradient(135deg, var(--warning), #E67E22);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* 逾期预警卡片 */
+        .overdue-alert {
+            background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--danger);
+            position: relative;
+            display: none;
+        }
+
+        .overdue-alert.show {
+            display: block;
+            animation: slideDown 0.4s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .overdue-alert-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--danger);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .overdue-alert-title::before {
+            content: '⚠️';
+            font-size: 20px;
+        }
+
+        .overdue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .overdue-item {
+            background: white;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .overdue-item .info {
+            color: var(--text);
+        }
+
+        .overdue-item .info strong {
+            color: var(--danger);
+        }
+
+        .overdue-item .days {
+            background: var(--danger);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* 标签切换 */
+        .tabs {
+            display: flex;
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 5px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 11px 14px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-light);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 2px 10px rgba(78, 205, 196, 0.3);
+        }
+
+        .tab .badge {
+            background: var(--accent);
+            color: white;
+            font-size: 11px;
+            padding: 1px 7px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .tab.active .badge {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 180px;
+            padding: 10px 14px;
+            font-size: 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: var(--bg-card);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: var(--bg-card);
+            color: var(--text);
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-dark);
+        }
+
+        .action-btn.danger {
+            color: var(--danger);
+            border-color: rgba(231, 76, 60, 0.3);
+        }
+
+        .action-btn.danger:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        /* 记录卡片 */
+        .card {
+            background: var(--bg-card);
+            border-radius: 18px;
+            padding: 24px 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .record-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .record-item {
+            background: var(--bg);
+            border-radius: 14px;
+            padding: 16px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .record-item.overdue {
+            border-left-color: var(--danger);
+            background: linear-gradient(to right, #FFF5F5, var(--bg));
+        }
+
+        .record-item.returned {
+            border-left-color: var(--success);
+            opacity: 0.75;
+        }
+
+        .record-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 12px rgba(78, 205, 196, 0.15);
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .record-book {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .record-status {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .record-status.borrowing {
+            background: #D6EAF8;
+            color: #2980B9;
+        }
+
+        .record-status.overdue {
+            background: #FADBD8;
+            color: var(--danger);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .record-status.returned {
+            background: #D5F5E3;
+            color: var(--success);
+        }
+
+        .record-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .record-info span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .record-info strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .record-dates {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 20px;
+            font-size: 13px;
+        }
+
+        .record-date {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-light);
+        }
+
+        .record-date strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .record-date.overdue-date strong {
+            color: var(--danger);
+        }
+
+        .record-wish {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border);
+            font-size: 13px;
+            color: #E67E22;
+            line-height: 1.6;
+        }
+
+        .record-wish::before {
+            content: '📖 想看的书：';
+            font-weight: 500;
+        }
+
+        .record-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .record-btn {
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: white;
+            color: var(--text);
+        }
+
+        .record-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .record-btn.return-btn {
+            color: var(--success);
+            border-color: rgba(39, 174, 96, 0.3);
+        }
+
+        .record-btn.return-btn:hover {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .record-btn.delete-btn {
+            color: var(--danger);
+            border-color: rgba(231, 76, 60, 0.3);
+        }
+
+        .record-btn.delete-btn:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--text);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 1000;
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            max-width: 80%;
+            text-align: center;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #E74C3C 0%, #EC7063 100%);
+        }
+
+        /* 心愿书单 */
+        .wish-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .wish-item {
+            background: linear-gradient(135deg, #FFF9E6 0%, #FFF4CC 100%);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .wish-item .wish-from {
+            font-size: 12px;
+            color: #B7752A;
+            margin-top: 6px;
+        }
+
+        .wish-item .wish-count {
+            float: right;
+            background: #E67E22;
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* 响应式 */
+        @media (max-width: 500px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-number {
+                font-size: 22px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .record-header {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="header-icon">📊</div>
+            <h1>图书角 · 后台管理</h1>
+            <p>借阅记录管理与逾期提醒</p>
+            <a href="index.html" class="back-link">← 返回借书登记</a>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats">
+            <div class="stat-item total">
+                <div class="stat-number" id="total-count">0</div>
+                <div class="stat-label">总借阅</div>
+            </div>
+            <div class="stat-item borrowing">
+                <div class="stat-number" id="borrowing-count">0</div>
+                <div class="stat-label">借阅中</div>
+            </div>
+            <div class="stat-item overdue">
+                <div class="stat-number" id="overdue-count">0</div>
+                <div class="stat-label">已逾期</div>
+            </div>
+            <div class="stat-item wish">
+                <div class="stat-number" id="wish-count">0</div>
+                <div class="stat-label">心愿书</div>
+            </div>
+        </div>
+
+        <!-- 逾期预警 -->
+        <div class="overdue-alert" id="overdue-alert">
+            <div class="overdue-alert-title">逾期提醒</div>
+            <div class="overdue-list" id="overdue-list">
+                <!-- 动态填充 -->
+            </div>
+        </div>
+
+        <!-- 标签切换 -->
+        <div class="tabs">
+            <button class="tab active" data-tab="all">全部记录</button>
+            <button class="tab" data-tab="borrowing">借阅中 <span class="badge" id="tab-borrowing-count">0</span></button>
+            <button class="tab" data-tab="overdue">已逾期 <span class="badge" id="tab-overdue-count">0</span></button>
+            <button class="tab" data-tab="returned">已归还</button>
+            <button class="tab" data-tab="wishes">心愿单</button>
+        </div>
+
+        <!-- 工具栏 -->
+        <div class="toolbar">
+            <input type="text" class="search-input" id="search-input" placeholder="🔍 搜索书名/姓名/学号...">
+            <button class="action-btn" onclick="exportData()">📥 导出数据</button>
+            <button class="action-btn danger" onclick="clearAll()">🗑️ 清空所有</button>
+        </div>
+
+        <!-- 记录列表 -->
+        <div class="card">
+            <div class="record-list" id="record-list">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📖</div>
+                    <p>暂无借阅记录<br>等待第一位读者的到来~</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const STORAGE_KEY = 'library_borrow_records';
+        let currentTab = 'all';
+        let searchKeyword = '';
+
+        // 获取记录
+        function getRecords() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        // 保存记录
+        function saveRecords(records) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        }
+
+        // Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}月${day}日`;
+        }
+
+        // 计算逾期天数
+        function getOverdueDays(returnDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const returnD = new Date(returnDate);
+            returnD.setHours(0, 0, 0, 0);
+            const diff = Math.floor((today - returnD) / (1000 * 60 * 60 * 24));
+            return diff > 0 ? diff : 0;
+        }
+
+        // 判断是否逾期
+        function isOverdue(record) {
+            if (record.returned) return false;
+            return getOverdueDays(record.returnDate) > 0;
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 更新统计
+        function updateStats() {
+            const records = getRecords();
+            const total = records.length;
+            const borrowing = records.filter(r => !r.returned).length;
+            const overdue = records.filter(r => isOverdue(r)).length;
+            const wishCount = records.filter(r => r.wishBooks && r.wishBooks.trim()).length;
+
+            document.getElementById('total-count').textContent = total;
+            document.getElementById('borrowing-count').textContent = borrowing;
+            document.getElementById('overdue-count').textContent = overdue;
+            document.getElementById('wish-count').textContent = wishCount;
+            document.getElementById('tab-borrowing-count').textContent = borrowing;
+            document.getElementById('tab-overdue-count').textContent = overdue;
+
+            // 更新逾期预警
+            const overdueRecords = records.filter(r => isOverdue(r)).sort((a, b) => 
+                getOverdueDays(b.returnDate) - getOverdueDays(a.returnDate)
+            );
+
+            const alertEl = document.getElementById('overdue-alert');
+            const listEl = document.getElementById('overdue-list');
+
+            if (overdueRecords.length > 0) {
+                alertEl.classList.add('show');
+                listEl.innerHTML = overdueRecords.slice(0, 5).map(r => `
+                    <div class="overdue-item">
+                        <div class="info">
+                            <strong>${escapeHtml(r.studentName)}</strong>（${escapeHtml(r.studentId)}）· 
+                            《${escapeHtml(r.bookName)}》
+                        </div>
+                        <div class="days">逾期 ${getOverdueDays(r.returnDate)} 天</div>
+                    </div>
+                `).join('');
+                if (overdueRecords.length > 5) {
+                    listEl.innerHTML += `<div style="text-align:center;font-size:12px;color:#B7752A;padding-top:4px;">还有 ${overdueRecords.length - 5} 条逾期记录...</div>`;
+                }
+            } else {
+                alertEl.classList.remove('show');
+            }
+        }
+
+        // 渲染记录列表
+        function renderRecords() {
+            let records = getRecords();
+
+            // 标签筛选
+            if (currentTab === 'borrowing') {
+                records = records.filter(r => !r.returned && !isOverdue(r));
+            } else if (currentTab === 'overdue') {
+                records = records.filter(r => isOverdue(r));
+            } else if (currentTab === 'returned') {
+                records = records.filter(r => r.returned);
+            }
+
+            // 搜索筛选
+            if (searchKeyword) {
+                const kw = searchKeyword.toLowerCase();
+                records = records.filter(r => 
+                    r.bookName.toLowerCase().includes(kw) ||
+                    r.studentName.toLowerCase().includes(kw) ||
+                    r.studentId.toLowerCase().includes(kw)
+                );
+            }
+
+            const listEl = document.getElementById('record-list');
+
+            if (records.length === 0) {
+                if (currentTab === 'wishes') {
+                    listEl.innerHTML = renderWishes();
+                } else {
+                    listEl.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>暂无相关记录</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+
+            if (currentTab === 'wishes') {
+                listEl.innerHTML = renderWishes();
+                return;
+            }
+
+            listEl.innerHTML = records.map(record => {
+                const overdue = isOverdue(record);
+                const overdueDays = getOverdueDays(record.returnDate);
+                let statusClass = 'borrowing';
+                let statusText = '借阅中';
+                
+                if (record.returned) {
+                    statusClass = 'returned';
+                    statusText = '已归还';
+                } else if (overdue) {
+                    statusClass = 'overdue';
+                    statusText = `逾期 ${overdueDays} 天`;
+                }
+
+                const itemClass = record.returned ? 'returned' : (overdue ? 'overdue' : '');
+                const dateClass = overdue && !record.returned ? 'overdue-date' : '';
+
+                return `
+                    <div class="record-item ${itemClass}">
+                        <div class="record-header">
+                            <div class="record-book">📚 ${escapeHtml(record.bookName)}</div>
+                            <span class="record-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="record-info">
+                            <span>👤 ${escapeHtml(record.studentName)}</span>
+                            <span>🎓 ${escapeHtml(record.studentId)}</span>
+                        </div>
+                        <div class="record-dates">
+                            <div class="record-date">借出：<strong>${formatDate(record.borrowDate)}</strong></div>
+                            <div class="record-date ${dateClass}">应还：<strong>${formatDate(record.returnDate)}</strong></div>
+                            ${record.returned && record.actualReturnDate ? 
+                                `<div class="record-date">实还：<strong>${formatDate(record.actualReturnDate)}</strong></div>` : ''}
+                        </div>
+                        ${record.wishBooks && record.wishBooks.trim() ? 
+                            `<div class="record-wish">${escapeHtml(record.wishBooks)}</div>` : ''}
+                        <div class="record-actions">
+                            ${!record.returned ? 
+                                `<button class="record-btn return-btn" onclick="markReturned(${record.id})">✓ 标记已还</button>` : ''}
+                            <button class="record-btn delete-btn" onclick="deleteRecord(${record.id})">删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 渲染心愿单
+        function renderWishes() {
+            const records = getRecords().filter(r => r.wishBooks && r.wishBooks.trim());
+            
+            if (records.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💭</div>
+                        <p>还没有心愿书单哦~</p>
+                    </div>
+                `;
+            }
+
+            // 统计每本书的推荐次数
+            const wishMap = {};
+            records.forEach(r => {
+                const books = r.wishBooks.split(/[，,、\s]+/).filter(b => b.trim());
+                books.forEach(book => {
+                    const b = book.trim().replace(/《》/g, '');
+                    if (!wishMap[b]) {
+                        wishMap[b] = { count: 0, from: [] };
+                    }
+                    wishMap[b].count++;
+                    if (!wishMap[b].from.includes(r.studentName)) {
+                        wishMap[b].from.push(r.studentName);
+                    }
+                });
+            });
+
+            const sorted = Object.entries(wishMap).sort((a, b) => b[1].count - a[1].count);
+
+            return `<div class="wish-list">` + sorted.map(([book, data]) => `
+                <div class="wish-item">
+                    <span class="wish-count">${data.count} 人推荐</span>
+                    📖 《${escapeHtml(book)}》
+                    <div class="wish-from">推荐人：${data.from.map(escapeHtml).join('、')}</div>
+                </div>
+            `).join('') + `</div>`;
+        }
+
+        // 标记已还
+        function markReturned(id) {
+            if (!confirm('确认这本书已经归还了吗？')) return;
+            
+            const records = getRecords();
+            const record = records.find(r => r.id === id);
+            if (record) {
+                record.returned = true;
+                record.actualReturnDate = new Date().toISOString().split('T')[0];
+                saveRecords(records);
+                updateStats();
+                renderRecords();
+                showToast('已标记为归还 ✓');
+            }
+        }
+
+        // 删除记录
+        function deleteRecord(id) {
+            if (!confirm('确定要删除这条记录吗？此操作不可撤销。')) return;
+            
+            let records = getRecords();
+            records = records.filter(r => r.id !== id);
+            saveRecords(records);
+            updateStats();
+            renderRecords();
+            showToast('记录已删除');
+        }
+
+        // 清空所有
+        function clearAll() {
+            if (!confirm('⚠️ 确定要清空所有借阅记录吗？此操作不可撤销！')) return;
+            if (!confirm('再次确认：真的要清空所有数据吗？')) return;
+            
+            saveRecords([]);
+            updateStats();
+            renderRecords();
+            showToast('所有记录已清空', 'error');
+        }
+
+        // 导出数据
+        function exportData() {
+            const records = getRecords();
+            if (records.length === 0) {
+                showToast('暂无数据可导出', 'error');
+                return;
+            }
+
+            // 导出为 CSV
+            const headers = ['借书日期', '预计还书', '实际还书', '书籍名称', '姓名', '学号', '状态', '想看的书'];
+            const rows = records.map(r => [
+                r.borrowDate,
+                r.returnDate,
+                r.actualReturnDate || '',
+                r.bookName,
+                r.studentName,
+                r.studentId,
+                r.returned ? '已归还' : (isOverdue(r) ? `逾期${getOverdueDays(r.returnDate)}天` : '借阅中'),
+                r.wishBooks || ''
+            ]);
+
+            const csv = '\uFEFF' + [headers, ...rows].map(row => 
+                row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `图书角借阅记录_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showToast('导出成功！');
+        }
+
+        // 标签切换
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                currentTab = this.dataset.tab;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                renderRecords();
+            });
+        });
+
+        // 搜索
+        document.getElementById('search-input').addEventListener('input', function() {
+            searchKeyword = this.value.trim();
+            renderRecords();
+        });
+
+        // 初始化
+        updateStats();
+        renderRecords();
+    </script>
+</body>
+</html>
